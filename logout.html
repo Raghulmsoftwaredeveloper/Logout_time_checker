@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work Time Calculator</title>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #6a11cb, #2575fc);
+      --card: rgba(255, 255, 255, 0.15);
+      --text: #fff;
+      --accent: #ffcc00;
+    }
+
+    body.dark {
+      --bg: linear-gradient(135deg, #0f0f0f, #2b2b2b);
+      --card: rgba(0, 0, 0, 0.45);
+      --text: #f5f5f5;
+      --accent: #00eaff;
+    }
+
+    body {
+      font-family: Poppins, Arial, sans-serif;
+      background: var(--bg);
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: var(--text);
+      transition: 0.3s;
+    }
+
+    .container {
+      background: var(--card);
+      backdrop-filter: blur(15px);
+      padding: 45px 40px; /* FIXED PADDING */
+      max-width: 460px;
+      width: 100%;
+      border-radius: 22px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+      position: relative;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      cursor: pointer;
+      font-size: 20px;
+      background: var(--accent);
+      color: #000;
+      padding: 6px 10px;
+      border-radius: 50%;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 26px;
+    }
+
+    .input-group {
+      margin-top: 20px; /* FIXED SPACING */
+      position: relative;
+    }
+
+    .input-group i {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      left: 12px;
+      font-size: 18px;
+      opacity: 0.8;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 12px 12px 40px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.25);
+      color: var(--text);
+    }
+
+    input::placeholder { color: #eee; }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover { transform: scale(1.05); }
+
+    .output {
+      margin-top: 25px;
+      padding: 18px;
+      background: rgba(0,0,0,0.3);
+      border-left: 5px solid var(--accent);
+      border-radius: 12px;
+      display: none;
+    }
+
+    .mobile-ui {
+      text-align: center;
+      font-size: 14px;
+      opacity: 0.7;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="theme-toggle" onclick="toggleTheme()">☀️</div>
+
+    <h2>Work Time Calculator</h2>
+
+    <div class="input-group">
+      <i>⏰</i>
+      <input type="text" id="login" placeholder="Last Login (HH:MM:SS)" />
+    </div>
+
+    <div class="input-group">
+      <i>⌛</i>
+      <input type="text" id="worked" placeholder="Worked Time (HH:MM:SS)" />
+    </div>
+
+    <button onclick="calculate()">Calculate Logout Time</button>
+
+    <div class="output" id="resultBox">
+      <p id="remain"></p>
+      <p id="logout"></p>
+    </div>
+
+    <p class="mobile-ui">✔ Optimized for Mobile | ✔ Auto-Save Enabled</p>
+  </div>
+
+  <script>
+    // Theme Toggle
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      document.querySelector('.theme-toggle').textContent =
+        document.body.classList.contains("dark") ? "🌙" : "☀️";
+      saveLocal();
+    }
+
+    // Local Storage Save
+    function saveLocal() {
+      localStorage.setItem("login", document.getElementById("login").value);
+      localStorage.setItem("worked", document.getElementById("worked").value);
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    // Load Saved Data
+    window.onload = function () {
+      if(localStorage.getItem("login"))
+        document.getElementById("login").value = localStorage.getItem("login");
+
+      if(localStorage.getItem("worked"))
+        document.getElementById("worked").value = localStorage.getItem("worked");
+
+      if(localStorage.getItem("theme") === "dark")
+        document.body.classList.add("dark");
+    }
+
+    function toSeconds(timeStr) {
+      let [h, m, s] = timeStr.split(":").map(Number);
+      return h * 3600 + m * 60 + (s || 0);
+    }
+
+    function formatTime(total) {
+      let h = Math.floor(total / 3600) % 24;
+      let m = Math.floor((total % 3600) / 60);
+      let s = total % 60;
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function calculate() {
+      const required = 8 * 3600 + 30 * 60;
+
+      let login = document.getElementById("login").value;
+      let worked = document.getElementById("worked").value;
+
+      if(!login.includes(":")) return alert("Enter valid login time");
+      if(!worked.includes(":")) return alert("Enter valid worked time");
+
+      saveLocal();
+
+      let loginSec = toSeconds(login);
+      let workedSec = toSeconds(worked);
+
+      let remaining = required - workedSec;
+      let logout = loginSec + remaining;
+
+      document.getElementById("remain").innerText = "Remaining Time: " + formatTime(remaining);
+      document.getElementById("logout").innerText = "Logout Time: " + formatTime(logout);
+
+      document.getElementById("resultBox").style.display = "block";
+    }
+  </script>
+</body>
+</html>
